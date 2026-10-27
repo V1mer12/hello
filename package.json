@@ -1,0 +1,24 @@
+{
+  "name": "my-biblia",
+  "version": "0.3.0",
+  "description": "My BIBLIA 0.3 — личный Windows desktop app для обучения и заработка",
+  "main": "resources/app/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron .",
+    "test": "node --check resources/app/main.js && node --check resources/app/preload.js && node --check resources/app/app.js"
+  },
+  "keywords": [
+    "electron",
+    "learning",
+    "productivity",
+    "windows",
+    "personal-system"
+  ],
+  "author": "V1mer12",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^31.7.1",
+    "electron-builder": "^24.13.0"
+  }
+}

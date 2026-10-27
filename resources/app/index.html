@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My BIBLIA 0.3</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand-block">
+          <div class="brand-name">My BIBLIA</div>
+          <div class="brand-version">v0.3</div>
+        </div>
+
+        <nav class="nav" id="nav"></nav>
+      </aside>
+
+      <main class="content">
+        <header class="topbar">
+          <div>
+            <h1 id="screen-title">Сьогодні</h1>
+          </div>
+          <button id="save-button" class="primary-btn">Зберегти</button>
+        </header>
+
+        <section id="screen-content" class="screen-content"></section>
+      </main>
+    </div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
