@@ -1,35 +1,296 @@
-<!DOCTYPE html>
-<html lang="uk">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My BIBLIA 0.3</title>
-    <link rel="stylesheet" href="./styles.css" />
-  </head>
-  <body>
-    <div class="app-shell">
-      <aside class="sidebar">
-        <div class="brand-block">
-          <div class="brand-name">My BIBLIA</div>
-          <div class="brand-version">v0.3</div>
-        </div>
+* {
+  box-sizing: border-box;
+}
 
-        <nav class="nav" id="nav"></nav>
-      </aside>
+:root {
+  --bg: #0d1117;
+  --bg-strong: #0a0d12;
+  --panel: #171b21;
+  --panel-soft: #1e242d;
+  --panel-muted: #232b35;
+  --border: #2d3743;
+  --text: #edf1f5;
+  --muted: #a9b3bf;
+  --accent: #84a7ff;
+  --accent-strong: #6a8ef7;
+  --success: #7ad8b0;
+  --warning: #f0c97a;
+  --danger: #ff8f8f;
+  --shadow: rgba(0, 0, 0, 0.38);
+}
 
-      <main class="content">
-        <header class="topbar">
-          <div>
-            <h1 id="screen-title">Сьогодні</h1>
-          </div>
-          <button id="save-button" class="primary-btn">Зберегти</button>
-        </header>
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+}
 
-        <section id="screen-content" class="screen-content"></section>
-      </main>
-    </div>
+body {
+  min-height: 100vh;
+}
 
-    <script src="./app.js"></script>
-  </body>
-</html>
+button, input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+  background: linear-gradient(180deg, var(--bg) 0%, var(--bg-strong) 100%);
+}
+
+.sidebar {
+  width: 270px;
+  background: rgba(22, 27, 35, 0.94);
+  border-right: 1px solid var(--border);
+  padding: 18px 14px;
+}
+
+.brand-block {
+  padding: 12px 10px 18px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 14px;
+}
+
+.brand-name {
+  font-size: 1.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.brand-version {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.nav-item {
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  padding: 12px 14px;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.nav-item:hover,
+.nav-item.active {
+  background: var(--panel-soft);
+  border-color: var(--border);
+}
+
+.content {
+  flex: 1;
+  padding: 20px 22px 26px;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 12px;
+}
+
+.topbar h1 {
+  margin: 0;
+  font-size: 2rem;
+}
+
+.primary-btn,
+.action-btn,
+.icon-btn {
+  border: none;
+  border-radius: 10px;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.primary-btn {
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: white;
+  padding: 10px 18px;
+  box-shadow: 0 10px 24px rgba(106, 142, 247, 0.25);
+}
+
+.action-btn {
+  background: rgba(132, 167, 255, 0.12);
+  border: 1px solid rgba(132, 167, 255, 0.25);
+  color: var(--text);
+  padding: 10px 14px;
+  margin-top: 12px;
+}
+
+.icon-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  color: var(--text);
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+}
+
+.icon-btn.danger {
+  border-color: rgba(255, 143, 143, 0.35);
+  color: var(--danger);
+}
+
+.primary-btn:hover,
+.action-btn:hover,
+.icon-btn:hover {
+  transform: translateY(-1px);
+}
+
+.screen-content {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+  gap: 18px;
+}
+
+.card {
+  background: rgba(28, 35, 42, 0.92);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 8px 20px var(--shadow);
+}
+
+.card.wide {
+  grid-column: 1 / -1;
+}
+
+.card h2 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  font-size: 1.2rem;
+}
+
+.field-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.field-box label {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+input {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(17, 20, 25, 0.78);
+  color: var(--text);
+  padding: 10px 12px;
+}
+
+.list-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.list-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.toggle-row {
+  margin-bottom: 10px;
+}
+
+.toggle-row label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text);
+}
+
+.toggle-row input {
+  width: auto;
+}
+
+.word-block {
+  display: grid;
+  gap: 12px;
+}
+
+.word-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.word-card {
+  background: rgba(20, 25, 32, 0.9);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.inline-note {
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.status-row {
+  margin-top: 12px;
+}
+
+.status-pill {
+  display: inline-flex;
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  border: 1px solid transparent;
+}
+
+.status-pill.ok {
+  background: rgba(122, 216, 176, 0.12);
+  border-color: rgba(122, 216, 176, 0.25);
+  color: var(--success);
+}
+
+.status-pill.warning {
+  background: rgba(240, 201, 122, 0.12);
+  border-color: rgba(240, 201, 122, 0.25);
+  color: var(--warning);
+}
+
+.empty-state {
+  color: var(--muted);
+  opacity: 0.9;
+  padding: 10px 0;
+}
+
+@media (max-width: 860px) {
+  .app-shell {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+}

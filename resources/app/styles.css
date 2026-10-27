@@ -1,202 +1,394 @@
-* {
-  box-sizing: border-box;
+const sections = [
+  {
+    id: 'today',
+    title: 'Сьогодні',
+    render: (workspace) => {
+      const today = workspace.today || { focus: 'Основна мета дня', tasks: [] };
+      return `
+        <div class="card wide">
+          <h2>Фокус дня</h2>
+          <div class="field-box">
+            <label>Основна мета</label>
+            <input data-field="today.focus" value="${escapeHtml(today.focus)}" />
+          </div>
+        </div>
+
+        <div class="card wide">
+          <h2>Завдання дня</h2>
+          <div class="list-editor">
+            ${renderListEditor(today.tasks, 'today.tasks')}
+          </div>
+        </div>
+      `;
+    }
+  },
+  {
+    id: 'learning',
+    title: 'Навчання',
+    render: (workspace) => {
+      const learning = workspace.learning || {
+        schedule: [],
+        selfTesting: [],
+        activeRecall: true,
+        spacedRepetition: true,
+        errorLog: [],
+        languages: []
+      };
+
+      const language = learning.languages && learning.languages[0] ? learning.languages[0] : {
+        name: 'English',
+        level: 'A0',
+        words: []
+      };
+
+      return `
+        <div class="card">
+          <h2>Розклад</h2>
+          <div class="list-editor">
+            ${renderListEditor(learning.schedule, 'learning.schedule')}
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Self-testing</h2>
+          <div class="list-editor">
+            ${renderListEditor(learning.selfTesting, 'learning.selfTesting')}
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Система повторення</h2>
+          <div class="toggle-row">
+            <label>
+              <input type="checkbox" data-field="learning.activeRecall" ${learning.activeRecall ? 'checked' : ''} />
+              Активне пригадування
+            </label>
+          </div>
+          <div class="toggle-row">
+            <label>
+              <input type="checkbox" data-field="learning.spacedRepetition" ${learning.spacedRepetition ? 'checked' : ''} />
+              Повторення через інтервали
+            </label>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Журнал помилок</h2>
+          <div class="list-editor">
+            ${renderListEditor(learning.errorLog, 'learning.errorLog')}
+          </div>
+        </div>
+
+        <div class="card wide">
+          <h2>Англійська — A0</h2>
+          <div class="word-block">
+            <div class="field-box">
+              <label>Назва мови</label>
+              <input data-field="learning.languages.0.name" value="${escapeHtml(language.name)}" />
+            </div>
+            <div class="field-box">
+              <label>Рівень</label>
+              <input data-field="learning.languages.0.level" value="${escapeHtml(language.level)}" />
+            </div>
+            <div class="word-grid">
+              ${renderWords(language.words || [])}
+            </div>
+            <button class="action-btn add" data-path="learning.languages.0.words" data-add-type="word">+ Додати слово</button>
+          </div>
+        </div>
+      `;
+    }
+  },
+  {
+    id: 'income',
+    title: 'Заробіток',
+    render: (workspace) => {
+      const income = workspace.income || { channels: [], goals: [] };
+      return `
+        <div class="card">
+          <h2>Канали заробітку</h2>
+          <div class="list-editor">
+            ${renderListEditor(income.channels, 'income.channels')}
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Цілі</h2>
+          <div class="list-editor">
+            ${renderListEditor(income.goals, 'income.goals')}
+          </div>
+        </div>
+      `;
+    }
+  },
+  {
+    id: 'resources',
+    title: 'Ресурси',
+    render: (workspace) => {
+      const resources = workspace.resources || { list: [], openAi: { enabled: true } };
+      return `
+        <div class="card wide">
+          <h2>Бібліотека ресурсів</h2>
+          <div class="list-editor">
+            ${renderListEditor(resources.list, 'resources.list')}
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>OpenAI</h2>
+          <div class="inline-note">
+            API ключ не пишемо в код. Працює через змінну середовища MYBIBLIA_OPENAI_KEY або OPENAI_API_KEY.
+          </div>
+          <div class="status-row">
+            <span class="status-pill ${workspace.settings && workspace.settings.apiProvider ? 'ok' : 'warning'}">
+              ${workspace.settings && workspace.settings.apiProvider ? 'API готово' : 'API не активовано'}
+            </span>
+          </div>
+        </div>
+      `;
+    }
+  },
+  {
+    id: 'wheel',
+    title: 'Колесо',
+    render: (workspace) => {
+      const wheel = workspace.wheel || { lifeFocus: [] };
+      return `
+        <div class="card wide">
+          <h2>Життєве колесо</h2>
+          <div class="list-editor">
+            ${renderListEditor(wheel.lifeFocus, 'wheel.lifeFocus')}
+          </div>
+        </div>
+      `;
+    }
+  },
+  {
+    id: 'diary',
+    title: 'Щоденник',
+    render: (workspace) => {
+      const diary = workspace.diary || { notes: [] };
+      return `
+        <div class="card wide">
+          <h2>Нотатки</h2>
+          <div class="list-editor">
+            ${renderListEditor(diary.notes, 'diary.notes')}
+          </div>
+        </div>
+      `;
+    }
+  }
+];
+
+let currentWorkspace = null;
+let activeSectionId = 'today';
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
-:root {
-  --bg: #0d1117;
-  --bg-strong: #0a0d12;
-  --panel: #171b21;
-  --panel-soft: #1e242d;
-  --panel-muted: #232b35;
-  --border: #2d3743;
-  --text: #edf1f5;
-  --muted: #a9b3bf;
-  --accent: #84a7ff;
-  --accent-strong: #6a8ef7;
-  --success: #7ad8b0;
-  --warning: #f0c97a;
-  --danger: #ff8f8f;
-  --shadow: rgba(0, 0, 0, 0.35);
+function renderListEditor(items, path) {
+  const safeItems = Array.isArray(items) ? items : [];
+  return `
+    ${safeItems.map((item, index) => `
+      <div class="list-row">
+        <input data-field="${path}.${index}" value="${escapeHtml(item)}" />
+        <button class="icon-btn" data-action="remove" data-path="${path}" data-index="${index}">✕</button>
+      </div>
+    `).join('')}
+    <button class="action-btn add" data-action="add" data-path="${path}">+ Додати</button>
+  `;
 }
 
-html, body {
-  margin: 0;
-  height: 100%;
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'Segoe UI', Tahoma, sans-serif;
-}
+function renderWords(words) {
+  const safeWords = Array.isArray(words) ? words : [];
 
-body {
-  min-height: 100vh;
-}
-
-button {
-  font: inherit;
-}
-
-.app-shell {
-  display: flex;
-  height: 100vh;
-  background: linear-gradient(180deg, var(--bg) 0%, var(--bg-strong) 100%);
-}
-
-.sidebar {
-  width: 260px;
-  background: rgba(22, 27, 35, 0.92);
-  border-right: 1px solid var(--border);
-  padding: 18px 14px;
-}
-
-.brand-block {
-  padding: 12px 10px 18px;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 14px;
-}
-
-.brand-name {
-  font-size: 1.7rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-}
-
-.brand-version {
-  margin-top: 4px;
-  color: var(--muted);
-  font-size: 0.8rem;
-}
-
-.nav {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.nav-item {
-  border: 1px solid transparent;
-  background: transparent;
-  color: var(--text);
-  text-align: left;
-  padding: 12px 14px;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.nav-item:hover,
-.nav-item.active {
-  background: var(--panel-soft);
-  border-color: var(--border);
-}
-
-.content {
-  flex: 1;
-  padding: 18px 22px 24px;
-}
-
-.topbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 18px;
-  border-bottom: 1px solid var(--border);
-  padding-bottom: 12px;
-}
-
-.topbar h1 {
-  margin: 0;
-  font-size: 2rem;
-}
-
-.primary-btn {
-  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-  color: white;
-  border: none;
-  border-radius: 12px;
-  padding: 10px 18px;
-  cursor: pointer;
-  box-shadow: 0 10px 24px rgba(106, 142, 247, 0.25);
-}
-
-.screen-content {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 18px;
-}
-
-.card {
-  background: rgba(28, 35, 42, 0.92);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 18px;
-  box-shadow: 0 8px 20px var(--shadow);
-}
-
-.card h2 {
-  margin-top: 0;
-  margin-bottom: 12px;
-  font-size: 1.2rem;
-}
-
-.card ul {
-  padding-left: 18px;
-  margin: 0;
-  color: var(--muted);
-}
-
-.card li + li {
-  margin-top: 8px;
-}
-
-.tag {
-  display: inline-block;
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: rgba(132, 167, 255, 0.12);
-  border: 1px solid rgba(132, 167, 255, 0.25);
-  color: #dfe9ff;
-  font-size: 0.76rem;
-  margin-right: 6px;
-  margin-bottom: 6px;
-}
-
-.word-grid {
-  display: grid;
-  gap: 10px;
-}
-
-.word-item {
-  background: rgba(28, 35, 42, 0.88);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 12px;
-}
-
-.word-item strong {
-  display: block;
-  margin-bottom: 6px;
-}
-
-.word-item small {
-  display: block;
-  color: var(--muted);
-  margin-top: 4px;
-}
-
-.inline-note {
-  color: var(--muted);
-  font-size: 0.88rem;
-  margin-top: 10px;
-}
-
-@media (max-width: 860px) {
-  .app-shell {
-    flex-direction: column;
+  if (!safeWords.length) {
+    return `
+      <div class="empty-state">Слова ще не додані. Натисніть «Додати слово».</div>
+    `;
   }
 
-  .sidebar {
-    width: 100%;
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-  }
+  return safeWords.map((word, index) => `
+    <div class="word-card">
+      <div class="field-box">
+        <label>Слово</label>
+        <input data-field="learning.languages.0.words.${index}.word" value="${escapeHtml(word.word || '')}" />
+      </div>
+      <div class="field-box">
+        <label>Переклад</label>
+        <input data-field="learning.languages.0.words.${index}.translate" value="${escapeHtml(word.translate || '')}" />
+      </div>
+      <div class="field-box">
+        <label>Чанки</label>
+        <input data-field="learning.languages.0.words.${index}.chunks" value="${escapeHtml((word.chunks || []).join(' • '))}" />
+      </div>
+      <button class="icon-btn danger" data-action="remove" data-path="learning.languages.0.words" data-index="${index}">Видалити</button>
+    </div>
+  `).join('');
 }
+
+function getByPath(obj, path) {
+  if (!path) {
+    return obj;
+  }
+
+  return path.split('.').reduce((result, key) => {
+    if (result == null) {
+      return undefined;
+    }
+    return result[key];
+  }, obj);
+}
+
+function setByPath(obj, path, value) {
+  const parts = path.split('.');
+  const finalKey = parts.pop();
+  let current = obj;
+
+  for (const part of parts) {
+    if (current[part] === undefined || current[part] === null) {
+      current[part] = {};
+    }
+    current = current[part];
+  }
+
+  current[finalKey] = value;
+  return obj;
+}
+
+function addListItem(path, defaultValue = '') {
+  const target = getByPath(currentWorkspace, path);
+  const arr = Array.isArray(target) ? [...target] : [];
+  arr.push(defaultValue);
+  setByPath(currentWorkspace, path, arr);
+}
+
+function removeListItem(path, index) {
+  const target = getByPath(currentWorkspace, path);
+  if (!Array.isArray(target)) {
+    return;
+  }
+
+  const updated = target.filter((_, itemIndex) => itemIndex !== index);
+  setByPath(currentWorkspace, path, updated);
+}
+
+function addWordItem() {
+  const words = getByPath(currentWorkspace, 'learning.languages.0.words') || [];
+  words.push({ word: 'new word', translate: 'нове слово', chunks: ['new word', 'a new word', 'this new word'] });
+  setByPath(currentWorkspace, 'learning.languages.0.words', words);
+}
+
+function buildNavigation() {
+  const nav = document.getElementById('nav');
+  nav.innerHTML = sections.map((section) => `
+    <button class="nav-item ${section.id === activeSectionId ? 'active' : ''}" data-section="${section.id}">
+      ${section.title}
+    </button>
+  `).join('');
+
+  nav.querySelectorAll('.nav-item').forEach((button) => {
+    button.addEventListener('click', () => {
+      activeSectionId = button.dataset.section;
+      render();
+    });
+  });
+}
+
+function render() {
+  const section = sections.find((item) => item.id === activeSectionId) || sections[0];
+  const titleNode = document.getElementById('screen-title');
+  const contentNode = document.getElementById('screen-content');
+
+  if (titleNode) {
+    titleNode.textContent = section.title;
+  }
+
+  if (contentNode && currentWorkspace) {
+    contentNode.innerHTML = section.render(currentWorkspace);
+  }
+
+  buildNavigation();
+  bindEvents();
+}
+
+function bindEvents() {
+  document.querySelectorAll('input[data-field]').forEach((input) => {
+    input.oninput = (event) => {
+      const field = event.target.dataset.field;
+      if (!field) {
+        return;
+      }
+
+      const rawValue = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
+      const currentValue = getByPath(currentWorkspace, field);
+
+      if (event.target.type === 'checkbox') {
+        setByPath(currentWorkspace, field, rawValue);
+        return;
+      }
+
+      if (field.endsWith('.chunks')) {
+        const split = rawValue.split('•').map((item) => item.trim()).filter(Boolean);
+        setByPath(currentWorkspace, field, split);
+        return;
+      }
+
+      setByPath(currentWorkspace, field, rawValue);
+    };
+  });
+
+  document.querySelectorAll('[data-action="add"]').forEach((button) => {
+    button.onclick = () => {
+      const path = button.dataset.path;
+      if (path === 'learning.languages.0.words') {
+        addWordItem();
+      } else {
+        addListItem(path, 'Новий пункт');
+      }
+      render();
+    };
+  });
+
+  document.querySelectorAll('[data-action="remove"]').forEach((button) => {
+    button.onclick = () => {
+      const path = button.dataset.path;
+      const index = Number(button.dataset.index);
+      if (Number.isInteger(index)) {
+        removeListItem(path, index);
+      }
+      render();
+    };
+  });
+}
+
+async function loadWorkspace() {
+  const info = await window.myBIBLIA.getAppInfo();
+  const workspace = await window.myBIBLIA.loadWorkspace();
+  currentWorkspace = workspace;
+  document.title = `${info.appName} ${info.version}`;
+  render();
+}
+
+async function saveWorkspace() {
+  if (!currentWorkspace) {
+    return;
+  }
+
+  currentWorkspace = await window.myBIBLIA.saveWorkspace(currentWorkspace);
+  render();
+}
+
+document.getElementById('save-button')?.addEventListener('click', saveWorkspace);
+
+window.addEventListener('DOMContentLoaded', () => {
+  loadWorkspace();
+});
+
+window.myBIBLIA = window.myBIBLIA || {};
