@@ -327,7 +327,6 @@ function bindEvents() {
       }
 
       const rawValue = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
-      const currentValue = getByPath(currentWorkspace, field);
 
       if (event.target.type === 'checkbox') {
         setByPath(currentWorkspace, field, rawValue);
