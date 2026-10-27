@@ -1,11 +1,13 @@
 {
   "name": "my-biblia",
   "version": "0.3.0",
-  "description": "My BIBLIA 0.3 — личный Windows desktop app для обучения и заработка",
+  "description": "My BIBLIA 0.3 — особистий Windows-застосунок для навчання, розвитку та заробітку",
   "main": "resources/app/main.js",
   "scripts": {
     "start": "electron .",
     "dev": "electron .",
+    "dev:win": "set NODE_ENV=development&& electron .",
+    "start:win": "set NODE_ENV=production&& electron .",
     "test": "node --check resources/app/main.js && node --check resources/app/preload.js && node --check resources/app/app.js"
   },
   "keywords": [
@@ -13,7 +15,8 @@
     "learning",
     "productivity",
     "windows",
-    "personal-system"
+    "personal-system",
+    "openai"
   ],
   "author": "V1mer12",
   "license": "MIT",
